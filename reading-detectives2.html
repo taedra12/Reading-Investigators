@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reading Detectives</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Special+Elite&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f1a16;
+    --panel:#182620;
+    --panel-2:#1f312a;
+    --paper:#efe6cf;
+    --paper-line:#d8cba7;
+    --amber:#d3a24a;
+    --amber-dim:#8a6b34;
+    --moss:#7fa383;
+    --text:#e9e4d4;
+    --muted:#a3ac9e;
+    --danger:#c1694f;
+    --radius:6px;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html{scroll-padding-top:env(safe-area-inset-top,0px); height:100%}
+  body{
+    margin:0; min-height:100%; background:var(--ink); color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;
+    font-size:16px; line-height:1.55;
+  }
+  h1,h2,h3{font-family:'Fraunces',Georgia,serif; margin:0; font-weight:600; letter-spacing:-.01em}
+  .tag{font-family:'Special Elite','Courier New',monospace; letter-spacing:.02em}
+  a{color:inherit}
+  button{font-family:inherit; cursor:pointer}
+  ::selection{background:var(--amber); color:var(--ink)}
+
+  header.site{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px clamp(16px,4vw,40px);
+    padding-top:calc(18px + env(safe-area-inset-top,0px));
+    border-bottom:1px solid #2a3b33;
+    position:sticky; top:0; background:rgba(15,26,22,.92); backdrop-filter:blur(6px); z-index:10;
+  }
+  .brand{display:flex; align-items:baseline; gap:10px; cursor:pointer}
+  .brand .mark{font-family:'Special Elite',monospace; color:var(--amber); font-size:.8rem}
+  .brand h1{font-size:1.25rem}
+  nav.site a{
+    font-size:.85rem; color:var(--muted); text-decoration:none; margin-left:20px;
+  }
+  nav.site a:hover{color:var(--text)}
+
+  main{max-width:920px; margin:0 auto; padding:clamp(24px,5vw,56px) clamp(16px,4vw,40px) 80px}
+
+  /* ---------- HOME ---------- */
+  .intro{margin-bottom:40px; max-width:60ch}
+  .intro .mark{color:var(--amber); font-size:.8rem; display:block; margin-bottom:10px}
+  .intro h2{font-size:clamp(1.6rem,4vw,2.3rem); line-height:1.15; margin-bottom:12px}
+  .intro p{color:var(--muted); font-size:1.02rem}
+
+  .shelf-label{
+    font-family:'Special Elite',monospace; font-size:.78rem; color:var(--amber-dim);
+    border-bottom:1px solid #2a3b33; padding-bottom:8px; margin:36px 0 18px;
+  }
+  .cases{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px}
+  .case{
+    position:relative; background:var(--paper); color:#26231a; border-radius:2px;
+    padding:20px 18px 18px; min-height:150px; display:flex; flex-direction:column; justify-content:space-between;
+    box-shadow:0 1px 0 #00000030; transform:rotate(-.3deg); transition:transform .15s ease;
+    text-decoration:none; border:none;
+  }
+  .case:nth-child(even){transform:rotate(.4deg)}
+  .case:hover{transform:rotate(0deg) translateY(-2px)}
+  .case::before{
+    content:""; position:absolute; top:-9px; left:16px; width:64px; height:14px;
+    background:var(--paper); border-radius:3px 3px 0 0;
+  }
+  .case .num{font-family:'Special Elite',monospace; font-size:.72rem; color:#7a6f4e}
+  .case h3{font-size:1.15rem; margin:8px 0 6px; color:#1c1a13}
+  .case p{margin:0; font-size:.86rem; color:#5b5646}
+  .case .meta{display:flex; gap:10px; margin-top:14px; font-size:.72rem; color:#7a6f4e; font-family:'Special Elite',monospace}
+  .case.locked{opacity:.55; filter:grayscale(.3); pointer-events:none}
+  .case.locked .meta{color:#8a836b}
+
+  /* ---------- GAME ---------- */
+  .backlink{display:inline-flex; align-items:center; gap:6px; color:var(--muted); text-decoration:none; font-size:.85rem; margin-bottom:22px}
+  .backlink:hover{color:var(--amber)}
+  .case-head{margin-bottom:22px}
+  .case-head .mark{color:var(--amber); font-size:.78rem}
+  .case-head h2{font-size:clamp(1.5rem,4vw,2rem); margin-top:6px}
+
+  .qar-key{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px;
+    margin:18px 0 28px; padding:16px; background:var(--panel); border:1px solid #2a3b33; border-radius:var(--radius);
+  }
+  .qar-key div b{display:block; color:var(--amber); font-size:.82rem; margin-bottom:3px}
+  .qar-key div span{color:var(--muted); font-size:.8rem}
+
+  .passage-box{
+    background:var(--paper); color:#26231a; border-radius:2px; padding:22px clamp(18px,4vw,30px);
+    font-size:1rem; line-height:1.7; box-shadow:0 2px 10px #00000040;
+  }
+  .passage-box p{margin:0 0 14px}
+  .passage-box p:last-child{margin-bottom:0}
+  .passage-toolbar{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px}
+  .chip{
+    border:1px solid var(--amber-dim); background:transparent; color:var(--amber);
+    padding:7px 13px; border-radius:999px; font-size:.8rem; font-family:'Special Elite',monospace;
+  }
+  .chip.active{background:var(--amber); color:var(--ink); border-color:var(--amber)}
+  mark.clue{background:#e8c979; padding:0 2px; border-radius:2px}
+
+  .qcard{
+    margin-top:26px; background:var(--panel); border:1px solid #2a3b33; border-radius:var(--radius); padding:24px clamp(18px,4vw,28px);
+  }
+  .qcard .prog{font-family:'Special Elite',monospace; font-size:.75rem; color:var(--muted); margin-bottom:10px}
+  .qcard h3{font-size:1.15rem; margin-bottom:16px}
+  .choices{display:grid; gap:10px}
+  .choice{
+    text-align:left; background:var(--panel-2); border:1px solid #2f4238; color:var(--text);
+    padding:12px 16px; border-radius:var(--radius); font-size:.92rem;
+  }
+  .choice:hover{border-color:var(--amber-dim)}
+  .choice.selected{border-color:var(--amber); background:#2a3b2f}
+  .choice.correct{border-color:var(--moss); background:#233b2c}
+  .choice.wrong{border-color:var(--danger); background:#3b2823}
+  .qcard-actions{display:flex; justify-content:space-between; align-items:center; margin-top:20px; flex-wrap:wrap; gap:10px}
+  .btn{
+    background:var(--amber); color:var(--ink); border:none; padding:10px 18px; border-radius:var(--radius);
+    font-weight:600; font-size:.88rem;
+  }
+  .btn:disabled{opacity:.4}
+  .btn.ghost{background:transparent; border:1px solid #2f4238; color:var(--text)}
+  .feedback{font-size:.85rem; margin-top:12px; min-height:1.2em}
+  .feedback.good{color:var(--moss)}
+  .feedback.bad{color:var(--danger)}
+
+  .report{
+    margin-top:30px; background:var(--panel); border:1px dashed var(--amber-dim); border-radius:var(--radius); padding:22px;
+  }
+  .report h3{font-size:1.05rem; margin-bottom:10px}
+  .report .score{font-family:'Special Elite',monospace; color:var(--amber); font-size:1.4rem; margin-bottom:14px}
+  .report ol{margin:0 0 16px 18px; padding:0; font-size:.85rem; color:var(--muted)}
+  .report ol li{margin-bottom:4px}
+  .report .row{display:flex; gap:10px; flex-wrap:wrap}
+  input[type=text]{
+    background:var(--panel-2); border:1px solid #2f4238; color:var(--text); padding:9px 12px;
+    border-radius:var(--radius); font-size:.88rem; width:100%; max-width:280px;
+  }
+
+  footer{text-align:center; color:#5a6a60; font-size:.75rem; padding:30px 20px 50px}
+  @media (max-width:520px){
+    .qcard-actions{flex-direction:column; align-items:stretch}
+    .btn{width:100%}
+  }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="brand" onclick="navigate('/')">
+    <span class="mark">CASE FILE</span>
+    <h1>Reading Detectives</h1>
+  </div>
+  <nav class="site"><a href="#/" onclick="navigate('/')">All cases</a></nav>
+</header>
+
+<main id="app"></main>
+
+<footer>Reading Detectives &mdash; comprehension case files for young readers</footer>
+
+<script>
+/* ---------- game data ---------- */
+const GAMES = {
+  "sea-otters": {
+    title: "Sea Otters",
+    subtitle: "QAR Detective",
+    caseNumber: "001",
+    blurb: "Fur, kelp forests, and a keystone species &mdash; track down where each answer really lives.",
+    minutes: 8,
+    difficulty: "Grade 4&ndash;6",
+    passage: [
+      "Along the rocky shorelines of the Pacific, from California to Alaska, sea otters have evolved a survival strategy that sets them apart from nearly every other marine mammal. While whales and seals rely on thick layers of blubber to insulate themselves against frigid waters, sea otters instead depend on extraordinarily dense fur &mdash; the densest of any animal on Earth, with up to one million hairs packed into a single square inch. This adaptation comes with a cost: to keep that fur functioning as an effective barrier against the cold, otters must groom for several hours each day, working air into their coats to create a layer of insulation that traps warmth against their skin.",
+      "This dependence on fur rather than fat also shapes otters' behavior in less obvious ways. Because their metabolism runs at an unusually high rate to generate body heat, otters must consume roughly a quarter of their body weight in food daily, and they have developed an unusual method for obtaining it: using rocks as tools to pry open the shells of mussels, clams, and crabs. Their voracious appetite, however, extends beyond mere survival &mdash; it makes them a keystone species. By preying heavily on sea urchins, otters prevent these spiny grazers from decimating kelp forests, ecosystems that shelter countless other marine species and absorb significant amounts of atmospheric carbon."
+    ],
+    questions: [
+      {
+        prompt: "What is the densest fur of any animal on Earth measured in, according to the passage?",
+        choices: ["Right There", "Think and Search", "Author and You", "On My Own"],
+        answer: 0,
+        why: "The exact number (\"one million hairs\") is stated directly in one sentence."
+      },
+      {
+        prompt: "Why do otters both groom for hours a day AND eat a quarter of their body weight daily?",
+        choices: ["Right There", "Think and Search", "Author and You", "On My Own"],
+        answer: 1,
+        why: "Grooming is explained in paragraph one and the food requirement in paragraph two &mdash; you connect both to answer."
+      },
+      {
+        prompt: "Based on the passage, why might losing sea otters be worse for an ecosystem than losing a less important species?",
+        choices: ["Right There", "Think and Search", "Author and You", "On My Own"],
+        answer: 2,
+        why: "The passage gives the keystone-species facts; you reason about \"worse for the ecosystem\" using that info plus your own thinking."
+      },
+      {
+        prompt: "Name another animal that relies on blubber instead of fur for warmth.",
+        choices: ["Right There", "Think and Search", "Author and You", "On My Own"],
+        answer: 0,
+        why: "Whales and seals are named directly in the first sentence's comparison."
+      },
+      {
+        prompt: "Have you ever seen an animal use a tool to get food, like the otter uses a rock? Describe it.",
+        choices: ["Right There", "Think and Search", "Author and You", "On My Own"],
+        answer: 3,
+        why: "This asks about your own experience &mdash; the text isn't needed to answer it."
+      },
+      {
+        prompt: "What two things does kelp forest protection provide, according to the passage?",
+        choices: ["Right There", "Think and Search", "Author and You", "On My Own"],
+        answer: 1,
+        why: "\"Shelter\" and \"carbon absorption\" are both named in the same sentence, but you gather them together as one answer."
+      }
+    ]
+  }
+};
+
+const QAR_KEY = [
+  ["Right There", "Stated in one sentence in the text."],
+  ["Think and Search", "Parts come from different spots in the text."],
+  ["Author and You", "Text info + your own thinking."],
+  ["On My Own", "Your own knowledge \u2014 the text isn't needed."]
+];
+
+/* ---------- router ---------- */
+function navigate(path){ location.hash = '#' + path; }
+window.addEventListener('hashchange', render);
+window.addEventListener('DOMContentLoaded', render);
+
+function render(){
+  const hash = location.hash.replace('#','') || '/';
+  const m = hash.match(/^\/game\/([\w-]+)/);
+  const app = document.getElementById('app');
+  if(m && GAMES[m[1]]){
+    app.innerHTML = gameView(m[1]);
+    wireGame(m[1]);
+  } else {
+    app.innerHTML = homeView();
+  }
+  window.scrollTo(0,0);
+}
+
+function homeView(){
+  const cards = Object.entries(GAMES).map(([id,g])=>`
+    <a class="case" href="#/game/${id}" onclick="navigate('/game/${id}')">
+      <div>
+        <span class="num">CASE ${g.caseNumber}</span>
+        <h3>${g.title}</h3>
+        <p>${g.blurb}</p>
+      </div>
+      <div class="meta"><span>${g.subtitle}</span><span>&middot;</span><span>${g.minutes} min</span><span>&middot;</span><span>${g.difficulty}</span></div>
+    </a>
+  `).join('');
+  return `
+    <section class="intro">
+      <span class="mark tag">OPEN CASES</span>
+      <h2>Every passage hides its answers in a different place. Your job is to find them.</h2>
+      <p>Pick a case below. Read the passage, underline your evidence, and sort each question by where its answer really comes from.</p>
+    </section>
+    <div class="shelf-label">CASE FILES ON THE SHELF</div>
+    <div class="cases">
+      ${cards}
+      <div class="case locked">
+        <div>
+          <span class="num">CASE 002</span>
+          <h3>Coming soon</h3>
+          <p>New cases are filed here as they're built.</p>
+        </div>
+        <div class="meta"><span>&mdash;</span></div>
+      </div>
+    </div>
+  `;
+}
+
+function gameView(id){
+  const g = GAMES[id];
+  const keyHtml = QAR_KEY.map(([k,d])=>`<div><b>${k}</b><span>${d}</span></div>`).join('');
+  const passageHtml = g.passage.map(p=>`<p>${p}</p>`).join('');
+  return `
+    <a class="backlink" href="#/" onclick="navigate('/')">&larr; All cases</a>
+    <div class="case-head">
+      <span class="mark tag">CASE ${g.caseNumber} &middot; ${g.subtitle}</span>
+      <h2>${g.title}</h2>
+    </div>
+    <div class="qar-key">${keyHtml}</div>
+
+    <div class="passage-toolbar">
+      <button class="chip" id="underline-toggle">&#9998; Underline clues: OFF</button>
+      <button class="chip" id="clear-underline">&#129534; Clear</button>
+    </div>
+    <div class="passage-box" id="passage">${passageHtml}</div>
+
+    <div class="qcard" id="qcard"></div>
+    <div id="report-slot"></div>
+  `;
+}
+
+/* ---------- game logic ---------- */
+function wireGame(id){
+  const g = GAMES[id];
+  let qi = 0, correct = 0, locked = false;
+  const answered = new Array(g.questions.length).fill(null);
+  const qcard = document.getElementById('qcard');
+  const passage = document.getElementById('passage');
+  const underlineBtn = document.getElementById('underline-toggle');
+  let underlineOn = false;
+
+  underlineBtn.onclick = ()=>{
+    underlineOn = !underlineOn;
+    underlineBtn.textContent = `\u270E Underline clues: ${underlineOn ? 'ON' : 'OFF'}`;
+    underlineBtn.classList.toggle('active', underlineOn);
+  };
+  document.getElementById('clear-underline').onclick = ()=>{
+    passage.querySelectorAll('mark.clue').forEach(m=>{
+      m.replaceWith(document.createTextNode(m.textContent));
+    });
+    passage.normalize();
+  };
+  function applySelectionUnderline(){
+    if(!underlineOn) return;
+    const sel = window.getSelection();
+    if(!sel || !sel.rangeCount || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    if(!passage.contains(range.commonAncestorContainer)) return;
+    try{
+      const mark = document.createElement('mark');
+      mark.className = 'clue';
+      range.surroundContents(mark);
+    }catch(e){ /* selection spans multiple elements; fall back to wrapping extracted contents */
+      try{
+        const mark = document.createElement('mark');
+        mark.className = 'clue';
+        mark.appendChild(range.extractContents());
+        range.insertNode(mark);
+      }catch(e2){ /* give up quietly */ }
+    }
+    sel.removeAllRanges();
+  }
+  passage.addEventListener('mouseup', applySelectionUnderline);
+  passage.addEventListener('touchend', ()=>{
+    // mobile selection isn't finalized until just after touchend
+    setTimeout(applySelectionUnderline, 50);
+  });
+
+  function drawQuestion(){
+    if(qi >= g.questions.length){ return drawReport(); }
+    const q = g.questions[qi];
+    locked = false;
+    qcard.innerHTML = `
+      <div class="prog">QUESTION ${qi+1} OF ${g.questions.length}</div>
+      <h3>${q.prompt}</h3>
+      <div class="choices">
+        ${q.choices.map((c,ci)=>`<button class="choice" data-ci="${ci}">${c}</button>`).join('')}
+      </div>
+      <div class="feedback" id="fb"></div>
+      <div class="qcard-actions">
+        <button class="btn ghost" id="hint-btn">\uD83D\uDCA1 Hint</button>
+        <button class="btn" id="next-btn" disabled>Check answer</button>
+      </div>
+    `;
+    const buttons = [...qcard.querySelectorAll('.choice')];
+    const fb = document.getElementById('fb');
+    const nextBtn = document.getElementById('next-btn');
+    let picked = null;
+
+    buttons.forEach(b=>{
+      b.onclick = ()=>{
+        if(locked) return;
+        buttons.forEach(x=>x.classList.remove('selected'));
+        b.classList.add('selected');
+        picked = Number(b.dataset.ci);
+        nextBtn.disabled = false;
+      };
+    });
+
+    document.getElementById('hint-btn').onclick = ()=>{
+      fb.textContent = 'Hint: ' + q.why.split(' &mdash; ')[0];
+      fb.className = 'feedback';
+    };
+
+    nextBtn.onclick = ()=>{
+      if(picked === null) return;
+      if(!locked){
+        locked = true;
+        const isRight = picked === q.answer;
+        answered[qi] = isRight;
+        if(isRight) correct++;
+        buttons[q.answer].classList.add('correct');
+        if(!isRight) buttons[picked].classList.add('wrong');
+        buttons.forEach(b=>b.disabled = true);
+        fb.textContent = (isRight ? '\u2713 Correct. ' : '\u2717 Not quite. ') + q.why;
+        fb.className = 'feedback ' + (isRight ? 'good' : 'bad');
+        nextBtn.textContent = qi === g.questions.length - 1 ? 'See report' : 'Next \u2192';
+      } else {
+        qi++;
+        drawQuestion();
+      }
+    };
+  }
+
+  function drawReport(){
+    const clues = [...passage.querySelectorAll('mark.clue')].map(m=>m.textContent.trim()).filter(Boolean);
+    const slot = document.getElementById('report-slot');
+    qcard.innerHTML = '';
+    slot.innerHTML = `
+      <div class="report">
+        <h3>Case closed</h3>
+        <div class="score">${correct}/${g.questions.length} QAR types identified correctly</div>
+        ${clues.length ? `<div><b style="font-size:.85rem">Your underlined evidence</b><ol>${clues.map(c=>`<li>${c}</li>`).join('')}</ol></div>` : ''}
+        <div class="row">
+          <input type="text" id="teacher-email" placeholder="Teacher's email (optional)">
+          <button class="btn ghost" id="copy-report">\uD83D\uDCCB Copy report</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('copy-report').onclick = ()=>{
+      const text = `${g.title} \u2014 ${correct}/${g.questions.length} correct\n` +
+        g.questions.map((q,i)=>`${i+1}. ${q.prompt}\n   Result: ${answered[i] ? 'Correct' : 'Missed'}`).join('\n');
+      navigator.clipboard.writeText(text).then(()=>{
+        const btn = document.getElementById('copy-report');
+        btn.textContent = 'Copied!';
+        setTimeout(()=>btn.textContent = '\uD83D\uDCCB Copy report', 1500);
+      });
+    };
+  }
+
+  drawQuestion();
+}
+</script>
+</body>
+</html>
